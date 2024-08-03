@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+
+    <meta name="theme-color" content="#ff5c00" />
+    <!-- favicon -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <title>Login - Follow</title>
+
+    <script>
+      (function () {
+        var e =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches,
+          t = localStorage.getItem("theme") || '"system"';
+        t && t !== '"system"' && (document.documentElement.dataset.theme = t);
+        t &&
+          t === '"system"' &&
+          e &&
+          (document.documentElement.dataset.theme = "dark");
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="module" src="./dx-helper.ts"></script>
+    <script type="module" src="./login.tsx"></script>
+  </body>
+</html>

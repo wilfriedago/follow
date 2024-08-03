@@ -13,13 +13,22 @@ import { getGitHash } from "./scripts/lib"
 const pkg = JSON.parse(readFileSync("package.json", "utf8"))
 const __dirname = fileURLToPath(new URL(".", import.meta.url))
 const isCI = process.env.CI === "true" || process.env.CI === "1"
+const ROOT = "./src/renderer"
+
 export default defineConfig({
   build: {
     outDir: resolve(__dirname, "out/web"),
     target: "ES2022",
     sourcemap: isCI,
+
+    rollupOptions: {
+      input: {
+        login: resolve(ROOT, "src/external/login/index.html"),
+        main: resolve(ROOT, "index.html"),
+      },
+    },
   },
-  root: "./src/renderer",
+  root: ROOT,
   envDir: resolve(__dirname, "."),
   resolve: {
     alias: {
