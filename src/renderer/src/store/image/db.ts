@@ -1,7 +1,7 @@
 import type { UseStore } from "idb-keyval"
 import { get, promisifyRequest, set } from "idb-keyval"
 
-import type { StoreImageType } from "."
+import type { StoreImageType } from "./types"
 
 function createStore(dbName: string, storeName: string): UseStore {
   const request = indexedDB.open(dbName)

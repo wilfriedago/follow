@@ -2,13 +2,8 @@ import type { EntryModel } from "@renderer/models"
 
 import { createZustandStore } from "../utils/helper"
 import { getImageDimensionsFromDb } from "./db"
+import type { StoreImageType } from "./types"
 
-export interface StoreImageType {
-  src: string
-  width: number
-  height: number
-  ratio: number
-}
 interface State {
   images: Record<string, StoreImageType>
 }

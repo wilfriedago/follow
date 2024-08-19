@@ -139,6 +139,9 @@ importers:
       '@yornaath/batshit':
         specifier: 0.10.1
         version: 0.10.1
+      blurhash:
+        specifier: 2.0.5
+        version: 2.0.5
       builder-util-runtime:
         specifier: 9.2.5-alpha.3
         version: 9.2.5-alpha.3
@@ -3076,6 +3079,9 @@ packages:
 
   bluebird@3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
+
+  blurhash@2.0.5:
+    resolution: {integrity: sha512-cRygWd7kGBQO3VEhPiTgq4Wc43ctsM+o46urrmPOiuAe+07fzlSB9OJVdpgDL0jPqXUVQ9ht7aq7kxOeJHRK+w==}
 
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
@@ -10569,6 +10575,8 @@ snapshots:
       bluebird: 3.7.2
 
   bluebird@3.7.2: {}
+
+  blurhash@2.0.5: {}
 
   boolbase@1.0.0: {}
 

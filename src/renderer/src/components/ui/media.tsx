@@ -1,9 +1,11 @@
 import { tipcClient } from "@renderer/lib/client"
 import { nextFrame } from "@renderer/lib/dom"
+import { getBlurHash } from "@renderer/lib/image"
 import { getProxyUrl } from "@renderer/lib/img-proxy"
 import { showNativeMenu } from "@renderer/lib/native-menu"
 import { cn } from "@renderer/lib/utils"
 import { saveImageDimensionsToDb } from "@renderer/store/image/db"
+import { encode } from "blurhash"
 import { useForceUpdate } from "framer-motion"
 import type { FC, ImgHTMLAttributes, VideoHTMLAttributes } from "react"
 import { memo, useMemo, useState } from "react"
@@ -90,14 +92,17 @@ const MediaImpl: FC<MediaProps> = ({
     props.onClick?.(e as any)
   })
   const handleOnLoad: React.ReactEventHandler<HTMLImageElement> =
-    useEventCallback((e) => {
+    useEventCallback(async (e) => {
       rest.onLoad?.(e as any)
       if ("cacheDimensions" in props && props.cacheDimensions && src) {
+        const target = e.currentTarget
+        const blurhash = await getBlurHash(target)
         saveImageDimensionsToDb(src, {
           src,
-          width: e.currentTarget.naturalWidth,
-          height: e.currentTarget.naturalHeight,
-          ratio: e.currentTarget.naturalWidth / e.currentTarget.naturalHeight,
+          width: target.naturalWidth,
+          height: target.naturalHeight,
+          ratio: target.naturalWidth / target.naturalHeight,
+          blurhash,
         })
       }
     })

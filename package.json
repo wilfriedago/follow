@@ -70,6 +70,7 @@
     "@tanstack/react-query-persist-client": "5.51.23",
     "@use-gesture/react": "10.3.1",
     "@yornaath/batshit": "0.10.1",
+    "blurhash": "2.0.5",
     "builder-util-runtime": "9.2.5-alpha.3",
     "class-variance-authority": "0.7.0",
     "click-to-react-component": "1.1.0",
