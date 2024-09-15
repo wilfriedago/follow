@@ -1,16 +1,13 @@
-import { execSync } from "node:child_process"
-import fs, { readFile, readFileSync } from "node:fs"
+import fs from "node:fs"
 import path, { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import middie from "@fastify/middie"
-import FastifyVite from "@fastify/vite"
-import { createHtmlTemplateFunction } from "@fastify/vite/utils"
-import type { FastifyReply, FastifyRequest } from "fastify"
+import type { FastifyRequest } from "fastify"
 import Fastify from "fastify"
 import { createServer as createViteServer } from "vite"
 
-const isDev = process.argv.includes("--dev")
+import { createApiClient } from "./api-client"
 
 // const __dirname = dirname(fileURLToPath(import.meta.url))
 // async function ca() {
@@ -77,7 +74,7 @@ server.get("*", async (req, reply) => {
 
     template = await vite.transformIndexHtml(url, template)
 
-    const html = template.replace(`<!-- SSG-META -->`, injectMetaHandler(url, req))
+    const html = template.replace(`<!-- SSG-META -->`, await injectMetaHandler(url, req))
 
     reply.type("text/html")
     reply.send(html)
@@ -87,18 +84,55 @@ server.get("*", async (req, reply) => {
   }
 })
 
-function injectMetaHandler(url: string, req: FastifyRequest) {
+async function injectMetaHandler(url: string, req: FastifyRequest) {
   const metaArr = [] as string[]
 
-  // og:title
-  metaArr.push(
-    `<meta property="og:title" content="Follow" />`,
-    `<meta property="og:url" content="https://app.follow.is" />`,
-    `<meta property="og:image" content="https://app.follow.is/opengraph-image.png" />`,
-    `<meta name="twitter:card" content="summary_large_image" />`,
-    `<meta name="twitter:title" content="Follow" />`,
-    `<meta name="twitter:image" content="https://app.follow.is/opengraph-image.png" />`,
-  )
+  const { cookie = "" } = req.headers
+
+  const parsedCookieMap = cookie
+    .split(";")
+    .map((item) => item.trim())
+    .reduce(
+      (acc, item) => {
+        const [key, value] = item.split("=")
+        acc[key] = value
+        return acc
+      },
+      {} as Record<string, string>,
+    )
+
+  const token = parsedCookieMap["authjs.session-token"]
+
+  if (!token) {
+    return ""
+  }
+
+  const apiClient = createApiClient(token)
+
+  switch (true) {
+    case url.startsWith("/feeds"): {
+      const sub = await apiClient.subscriptions
+        .$get({
+          query: {},
+        })
+        .then((sub) => sub.data)
+        .catch((e) => {
+          console.error(e)
+          return null
+        })
+
+      if (!sub) {
+        return ""
+      }
+      // const feeds = await apiClient.feeds.list()
+      // metaArr.push(`<meta property="og:title" content="${feeds.title}" />`)
+      // metaArr.push(`<meta property="og:description" content="${feeds.description}" />`)
+      // metaArr.push(`<meta property="og:image" content="${feeds.image}" />`)
+      metaArr.push(`<meta property="og:title" content="Feeds" />`)
+      break
+    }
+  }
+
   return metaArr.join("\n")
 }
 
