@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/(.*)",
+      "destination": "/out/server/index.js"
+    },
+    {
       "source": "/__debug_proxy",
       "destination": "/__debug_proxy.html"
     },
