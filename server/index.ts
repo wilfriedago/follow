@@ -9,52 +9,34 @@ import { createServer as createViteServer } from "vite"
 
 import { createApiClient } from "./api-client"
 
-// const __dirname = dirname(fileURLToPath(import.meta.url))
-// async function ca() {
-//   // Create CA and cert if in dev mode
-//   if (!isDev) {
-//     return
-//   }
-//   const caExists =
-//     fs.existsSync(resolve(__dirname, "./cert/fastify.key")) &&
-//     fs.existsSync(resolve(__dirname, "./cert/fastify.cert"))
-//   if (caExists) {
-//     return
-//   }
-
-//   const ca = await createCA({
-//     organization: "Dev CA",
-//     countryCode: "US",
-//     state: "California",
-//     locality: "San Francisco",
-//     validity: 365,
-//   })
-
-//   const cert = await createCert({
-//     domains: ["localhost", "127.0.0.1"],
-//     validity: 365,
-//     ca: {
-//       key: ca.key,
-//       cert: ca.cert,
-//     },
-//   })
-
-//   fs.writeFileSync(resolve(__dirname, "./cert/fastify.key"), cert.key)
-//   fs.writeFileSync(resolve(__dirname, "./cert/fastify.cert"), cert.cert)
-// }
-
-// await ca()
-// // write a macos system extension to trust the cert if not trusted
-// if (isDev && process.platform === "darwin") {
-//   execSync(
-//     `security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain ${resolve(__dirname, "./cert/fastify.cert")}`,
-//   )
-// }
-
-const server = Fastify({})
-await server.register(middie, {
-  hook: "onRequest", // default
+const app = Fastify({})
+await app.register(middie, {
+  hook: "onRequest",
 })
+
+function buildSeoMetaTags(configs: {
+  openGraph: {
+    title: string
+    description?: string
+    image?: string | null
+  }
+}) {
+  const { openGraph } = configs
+  return [
+    `<meta property="og:title" content="${openGraph.title}" />`,
+    openGraph.description
+      ? `<meta property="og:description" content="${openGraph.description}" />`
+      : "",
+    openGraph.image ? `<meta property="og:image" content="${openGraph.image}" />` : "",
+    // Twitter
+    `<meta property="twitter:card" content="summary_large_image" />`,
+    `<meta property="twitter:title" content="${openGraph.title}" />`,
+    openGraph.description
+      ? `<meta property="twitter:description" content="${openGraph.description}" />`
+      : "",
+    openGraph.image ? `<meta property="twitter:image" content="${openGraph.image}" />` : "",
+  ]
+}
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const vite = await createViteServer({
@@ -64,9 +46,9 @@ const vite = await createViteServer({
   configFile: resolve(root, "vite.config.ts"),
 })
 
-server.use(vite.middlewares)
+app.use(vite.middlewares)
 
-server.get("*", async (req, reply) => {
+app.get("*", async (req, reply) => {
   const url = req.originalUrl
 
   try {
@@ -74,10 +56,26 @@ server.get("*", async (req, reply) => {
 
     template = await vite.transformIndexHtml(url, template)
 
-    const html = template.replace(`<!-- SSG-META -->`, await injectMetaHandler(url, req))
+    const dynamicInjectMetaString = await injectMetaHandler(url, req).catch((err) => {
+      if (process.env.NODE_ENV === "development") {
+        throw err
+      }
+      return ""
+    })
+    template = template.replace(`<!-- SSG-META -->`, dynamicInjectMetaString)
+
+    if (dynamicInjectMetaString) {
+      template = template.replace(`<!-- SSG-META -->`, dynamicInjectMetaString)
+
+      // Remove <!-- Default Open Graph --> between <!-- End Default Open Graph -->
+      const endCommentString = "<!-- End Default Open Graph -->"
+      const startIndex = template.indexOf("<!-- Default Open Graph -->")
+      const endIndex = template.indexOf(endCommentString)
+      template = template.slice(0, startIndex) + template.slice(endIndex + endCommentString.length)
+    }
 
     reply.type("text/html")
-    reply.send(html)
+    reply.send(template)
   } catch (e) {
     vite.ssrFixStacktrace(e)
     reply.code(500).send(e)
@@ -110,25 +108,34 @@ async function injectMetaHandler(url: string, req: FastifyRequest) {
   const apiClient = createApiClient(token)
 
   switch (true) {
-    case url.startsWith("/feeds"): {
-      const sub = await apiClient.subscriptions
+    case url.startsWith("/feed"): {
+      const parsedUrl = new URL(url, "https://example.com")
+      const feedId = parsedUrl.pathname.split("/")[2]
+      const feed = await apiClient.feeds
         .$get({
-          query: {},
+          query: {
+            id: feedId,
+          },
         })
-        .then((sub) => sub.data)
-        .catch((e) => {
-          console.error(e)
-          return null
-        })
+        .then((res) => res.data.feed)
 
-      if (!sub) {
+      if (!feed) {
         return ""
       }
-      // const feeds = await apiClient.feeds.list()
-      // metaArr.push(`<meta property="og:title" content="${feeds.title}" />`)
-      // metaArr.push(`<meta property="og:description" content="${feeds.description}" />`)
-      // metaArr.push(`<meta property="og:image" content="${feeds.image}" />`)
-      metaArr.push(`<meta property="og:title" content="Feeds" />`)
+
+      if (!feed.title || !feed.description) {
+        return ""
+      }
+
+      metaArr.push(
+        ...buildSeoMetaTags({
+          openGraph: {
+            title: feed.title,
+            description: feed.description,
+            image: feed.image,
+          },
+        }),
+      )
       break
     }
   }
@@ -136,6 +143,13 @@ async function injectMetaHandler(url: string, req: FastifyRequest) {
   return metaArr.join("\n")
 }
 
-await server.listen({ port: 2233 })
+const isVercel = process.env.VERCEL === "1"
+if (!isVercel) {
+  await app.listen({ port: 2233 })
+  console.info("Server is running on http://localhost:2233")
+}
 
-console.info("Server is running on http://localhost:2233")
+export default async function handler(req: any, res: any) {
+  await app.ready()
+  app.server.emit("request", req, res)
+}
