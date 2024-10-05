@@ -3,6 +3,8 @@
 import fs from "node:fs"
 import path from "node:path"
 
+import { snakeCase } from "lodash-es"
+
 export default {
   rules: {
     "valid-i18n-keys": {
@@ -119,6 +121,67 @@ export default {
 
                   return fixer.replaceText(node, newText)
                 },
+              })
+            }
+          },
+        }
+      },
+    },
+    "i18n-keys-snake-case": {
+      meta: {
+        type: "problem",
+        docs: {
+          description: "Ensure the last part of i18n JSON keys are in snake_case format",
+          category: "Formatting",
+          recommended: true,
+        },
+        fixable: "code",
+      },
+      create(context) {
+        const isSnakeCase = (str) => /^[a-z0-9]+(?:_[a-z0-9]+)*$/.test(str)
+        const toSnakeCase = snakeCase
+
+        return {
+          Program(node) {
+            const { filename, sourceCode } = context
+
+            if (!filename.endsWith(".json")) return
+
+            let json
+            try {
+              json = JSON.parse(sourceCode.text)
+            } catch {
+              context.report({
+                node,
+                message: "Invalid JSON format",
+              })
+              return
+            }
+
+            const problems = []
+
+            const checkKeys = (obj, prefix = "") => {
+              for (const [key, value] of Object.entries(obj)) {
+                const fullKey = prefix ? `${prefix}.${key}` : key
+                const lastPart = key.split(".").pop()
+                if (!isSnakeCase(lastPart)) {
+                  problems.push({
+                    key: fullKey,
+                    fixedKey: fullKey.replace(new RegExp(`${lastPart}$`), toSnakeCase(lastPart)),
+                  })
+                }
+                if (typeof value === "object" && value !== null) {
+                  checkKeys(value, fullKey)
+                }
+              }
+            }
+
+            checkKeys(json)
+
+            for (const { key } of problems) {
+              context.report({
+                node,
+                message: `Last part of key "${key}" is not in snake_case format`,
               })
             }
           },

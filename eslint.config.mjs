@@ -61,6 +61,7 @@ export default defineConfig(
     rules: {
       "recursive-sort/recursive-sort": "error",
       "check-i18n-json/valid-i18n-keys": "error",
+      "check-i18n-json/i18n-keys-snake-case": "error",
       "check-i18n-json/no-extra-keys": "error",
     },
   },

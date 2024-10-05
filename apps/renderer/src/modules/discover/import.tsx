@@ -44,17 +44,17 @@ const list: {
 }[] = [
   {
     key: "parsedErrorItems",
-    title: "discover.import.parsedErrorItems",
+    title: "discover.import.parsed_error_items",
     className: "text-red-500",
   },
   {
     key: "successfulItems",
-    title: "discover.import.successfulItems",
+    title: "discover.import.successful_items",
     className: "text-green-500",
   },
   {
     key: "conflictItems",
-    title: "discover.import.conflictItems",
+    title: "discover.import.conflict_items",
     className: "text-yellow-500",
   },
 ]
@@ -174,7 +174,7 @@ export function DiscoverImport() {
                   </div>
                   <div className="space-y-4">
                     {!mutation.data?.[item.key].length && (
-                      <div className="text-zinc-500">{t("discover.import.noItems")}</div>
+                      <div className="text-zinc-500">{t("discover.import.no_items")}</div>
                     )}
                     {mutation.data?.[item.key].map((feed) => (
                       <FollowSummary className="max-w-[462px]" key={feed.id} feed={feed} />

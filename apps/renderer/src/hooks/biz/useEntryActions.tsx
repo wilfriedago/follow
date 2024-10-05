@@ -362,7 +362,7 @@ export const useEntryActions = ({
       {
         key: "openInBrowser",
         name: t("entry_actions.open_in_browser", {
-          which: t(window.electron ? "words.browser" : "words.newTab"),
+          which: t(window.electron ? "words.browser" : "words.new_tab"),
         }),
         shortcut: shortcuts.entry.openInBrowser.key,
         className: "i-mgc-world-2-cute-re",
