@@ -21,6 +21,7 @@ const $container = document.querySelector("#root") as HTMLElement
 if (IN_ELECTRON && getOS() === "Windows") {
   document.body.style.cssText += `--fo-window-padding-top: ${ElECTRON_CUSTOM_TITLEBAR_HEIGHT}px;`
 }
+console.info("render")
 ReactDOM.createRoot($container).render(
   <React.StrictMode>
     <RouterProvider router={router} />
