@@ -75,7 +75,8 @@ export default ({ mode }) => {
       devPrint(),
       createDependencyChunksPlugin([
         //  React framework
-        ["react", "react-dom", "react-router-dom", "react-error-boundary", "react-dom/server"],
+        ["react", "react-dom"],
+        ["react-error-boundary", "react-dom/server", "react-router-dom"],
         // Data Statement
         ["zustand", "jotai", "use-context-selector", "immer", "dexie"],
         // Remark
@@ -131,7 +132,6 @@ export default ({ mode }) => {
           "@tanstack/react-query-persist-client",
           "@tanstack/query-sync-storage-persister",
         ],
-        ["blurhash", "react-blurhash"],
         ["tldts"],
         ["shiki", "@shikijs/transformers"],
         ["@sentry/react", "posthog-js"],
